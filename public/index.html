@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#e22518">
+  <meta name="description" content="Trouvez votre prochain séjour avec FRAM. Décrivez vos envies ou choisissez directement vos critères.">
+  <title>FRAM — Votre prochain séjour</title>
+  <link rel="icon" href="/assets/fram.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" type="module"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="FRAM, accueil"><img src="/assets/fram.svg" width="126" height="40" alt="FRAM"></a>
+    <nav aria-label="Navigation principale">
+      <button id="catalogue-open" class="nav-link">Nos destinations <span class="count-badge">20</span></button>
+      <button id="config-open" class="connection"><span class="status-dot"></span><span id="connection-label">Réglages</span><span aria-hidden="true">⚙</span></button>
+    </nav>
+  </header>
+
+  <div class="workspace">
+    <main id="main">
+      <div class="main-inner">
+        <section id="welcome" class="welcome" aria-labelledby="hero-title"><h1 id="hero-title">On part <em>où ?</em></h1></section>
+
+        <div id="conversation-wrap" class="conversation-wrap" hidden>
+          <button type="button" id="conversation-toggle" class="conversation-toggle" aria-expanded="false" aria-controls="conversation" hidden>Étendre la conversation <span aria-hidden="true">⌄</span></button>
+          <section id="conversation" class="conversation" aria-label="Votre conversation" aria-live="polite" aria-relevant="additions"></section>
+        </div>
+
+        <form id="search-form" class="composer">
+          <label class="sr-only" for="prompt">Décrivez votre voyage ou précisez vos envies</label>
+          <div class="composer-body"><span class="composer-spark" aria-hidden="true">✧</span><textarea id="prompt" rows="1" maxlength="2000" placeholder="Une semaine au soleil, un petit hôtel au calme…" required></textarea><button id="send" class="send" type="submit" aria-label="Envoyer ma demande" title="Envoyer · Entrée"><span aria-hidden="true">↑</span></button></div>
+        </form>
+
+        <div id="suggestions" class="suggestions" aria-label="Exemples de demandes">
+          <button data-prompt="Une semaine en Grèce au départ de Lyon, 1 000 € maximum par personne. Un petit hôtel calme près d’une plage de sable, loin des grands complexes.">☀ <span>Du calme en Grèce</span></button>
+          <button data-prompt="Nous sommes 2 adultes et 2 enfants. Une semaine au départ de Paris, un hôtel avec club enfants et piscine, en tout compris. Budget total : 3 500 €.">⌂ <span>En famille</span></button>
+          <button data-prompt="Un séjour à Madère pour randonner et me déconnecter, dans un petit hôtel au vert. 7 nuits au départ de Nantes, moins de 1 200 € par personne.">♧ <span>Au vert</span></button>
+        </div>
+        <div id="activity" class="activity" role="status" aria-live="polite" hidden><span class="spinner"></span><span id="activity-label"></span><button type="button" id="cancel-search" class="text-button">Arrêter</button></div>
+        <div id="error" class="error" role="alert" hidden><span id="error-text"></span><button type="button" id="retry" class="text-button">Réessayer</button></div>
+        <div id="setup-note" class="setup-note" hidden>Ajoutez votre clé Mistral pour commencer. <button type="button" id="setup-help" class="text-button">Configurer ↗</button></div>
+
+        <section id="results-section" class="results-section" aria-labelledby="results-title">
+          <div class="section-heading"><h2 id="results-title">Quelques idées pour partir</h2><span id="results-count" class="results-count">20 destinations</span></div>
+          <div id="results" class="hotel-grid"></div>
+          <div id="empty-results" class="empty-results" hidden><span aria-hidden="true">⌕</span><h3>On ajuste un critère ?</h3><p>Aucun séjour ne correspond à cette sélection.</p></div>
+        </section>
+        <footer class="page-note">Démo · Hôtels et offres fictifs · 2027</footer>
+      </div>
+    </main>
+
+    <aside class="criteria-panel" aria-labelledby="criteria-title">
+      <div class="panel-heading"><h2 id="criteria-title">Votre séjour</h2><span class="live-indicator" title="Mis à jour pendant la conversation"><span></span></span></div>
+      <div id="criteria-list" class="criteria-list" role="group" aria-label="Critères modifiables"></div>
+      <section class="preferences-block"><div class="subheading"><h3>Vos envies</h3><button id="edit-envies" type="button" class="icon-button" aria-label="Modifier vos envies">+</button></div><div id="preferences" class="preferences"></div></section>
+      <button id="reset" class="reset" type="button"><span aria-hidden="true">↻</span> Nouvelle recherche</button>
+    </aside>
+  </div>
+
+  <dialog id="criterion-dialog" class="modal criterion-modal" aria-labelledby="criterion-title">
+    <div class="modal-header"><h2 id="criterion-title">Modifier un critère</h2><button class="close-button" data-close aria-label="Fermer">×</button></div>
+    <form id="criterion-form"><div id="criterion-fields" class="editor-fields"></div><p id="criterion-error" class="editor-error" role="alert" hidden></p><div class="editor-actions"><button type="button" id="criterion-clear" class="text-button">Effacer</button><button type="submit" class="primary-button">Appliquer <span aria-hidden="true">→</span></button></div></form>
+  </dialog>
+
+  <dialog id="config-dialog" class="modal config-modal" aria-labelledby="config-title">
+    <div class="modal-header"><h2 id="config-title">Réglages</h2><button class="close-button" data-close aria-label="Fermer">×</button></div>
+    <p id="config-state"></p>
+    <ol class="setup-steps"><li>Copiez le fichier de configuration.<pre>cp .env.example .env</pre></li><li>Ajoutez votre clé dans <code>.env</code>.<pre>MISTRAL_API_KEY=votre_cle</pre></li><li>Lancez l’application.<pre>npm start</pre></li></ol>
+    <p class="modal-note">Node.js 22+. La clé reste côté serveur et le fichier .env est ignoré par Git. Les appels Mistral utilisent le quota de votre compte.</p>
+    <details class="technical"><summary>Données de recherche <span aria-hidden="true">⌄</span></summary><pre id="criteria-json"></pre></details>
+  </dialog>
+
+  <dialog id="catalogue-dialog" class="modal catalogue-modal" aria-labelledby="catalogue-title">
+    <div class="modal-header"><h2 id="catalogue-title">Nos destinations</h2><button class="close-button" data-close aria-label="Fermer">×</button></div>
+    <div class="catalogue-filters"><label for="catalogue-destination">Destination<select id="catalogue-destination"><option value="">Toutes les destinations</option></select></label><label for="catalogue-type">Style d’hôtel<select id="catalogue-type"><option value="">Tous les styles</option><option value="boutique">Boutique & intimiste</option><option value="famille">En famille</option><option value="club">Club & animé</option><option value="nature">Nature & randonnée</option><option value="spa">Spa & adultes</option></select></label></div>
+    <p id="catalogue-count" class="muted" role="status"></p><div id="catalogue-results" class="hotel-grid"></div>
+    <div class="pagination"><button id="page-prev" class="outline-button">← Précédent</button><span id="page-label"></span><button id="page-next" class="outline-button">Suivant →</button></div>
+  </dialog>
+
+  <dialog id="hotel-dialog" class="modal hotel-modal" aria-labelledby="hotel-title"><div class="modal-header"><span class="eyebrow">HÔTEL FICTIF</span><button class="close-button" data-close aria-label="Fermer">×</button></div><div id="hotel-detail"></div></dialog>
+</body>
+</html>
