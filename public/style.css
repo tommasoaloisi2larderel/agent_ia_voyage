@@ -15,3 +15,45 @@
 @media(max-width:700px){.topbar{height:74px;padding:0 22px}.brand img{width:101px}nav{gap:17px}.nav-link{font-size:11px;gap:6px}.count-badge{font-size:9px}.connection{padding:8px;font-size:10px}.connection>span:last-child{display:none}.workspace{display:flex;flex-direction:column;gap:23px;padding:0 22px;margin-top:20px}.workspace main{width:100%}.main-inner{padding-bottom:0}.welcome{padding:28px 0 24px}.welcome h1{font-size:49px;letter-spacing:-2.3px}.composer-body{padding:12px;gap:10px}.composer textarea{font-size:13px;min-height:52px;padding:5px 0}.composer-spark{font-size:24px}.send{width:37px;min-width:37px;height:37px}.suggestions{gap:7px;margin-top:13px}.suggestions button{padding:8px 10px;gap:5px;font-size:13px}.suggestions button span{font-size:10px}.results-section{margin-top:34px}.section-heading{margin-bottom:18px}.section-heading h2{font-size:21px;line-height:1.3;max-width:230px}.results-count{font-size:10px}.hotel-grid{gap:12px}.hotel-image{height:136px}.hotel-card h3{font-size:15px;min-height:42px}.card-facts{font-size:10px}.card-body{padding:13px 11px}.price{font-size:21px}.price small{font-size:9px}.card-location{font-size:9px;flex-wrap:wrap}.page-note{font-size:9px;margin-top:20px}.criteria-panel{position:static;max-height:none;overflow:visible;width:100%;padding:21px;margin-bottom:24px;border-radius:16px}.criteria-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 10px}.panel-heading{margin-bottom:14px}.panel-heading h2{font-size:20px}.criterion{padding:10px 5px;gap:8px}.criterion-value{font-size:11px}.criterion-label{font-size:10px}.criterion-icon{width:26px;height:26px;font-size:15px}.criterion-edit{font-size:14px}.preferences-block{padding:16px 4px 0}.reset{margin-top:18px;padding-top:16px}.conversation-wrap{margin-top:4px}.conversation-toggle{font-size:10px}.message{font-size:13px}.message.user{font-size:12px;padding:12px 14px}.modal{padding:22px 19px;border-radius:16px;max-height:92vh}.modal h2{font-size:23px}.catalogue-modal .hotel-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.catalogue-modal .hotel-image{height:115px}.catalogue-filters{gap:9px}.catalogue-filters select{font-size:11px;padding:10px 7px}.detail-image{height:185px}.criterion-modal{max-width:430px}.activity{font-size:10px}.editor-field input,.editor-field select,.editor-field textarea{font-size:16px}.editor-pair{gap:10px}.editor-field input[type=date]{font-size:13px}.card-open{width:28px;height:28px}}
 @media(max-width:380px){.topbar{padding:0 17px}.brand img{width:90px}nav{gap:12px}.nav-link{font-size:10px}.count-badge{display:none}.connection{font-size:9px}.workspace{padding:0 17px}.welcome h1{font-size:45px}.hotel-grid{grid-template-columns:1fr}.hotel-grid>.hotel-card:last-child:nth-child(3){display:block}.hotel-image{height:175px}.hotel-card h3{font-size:18px;min-height:0}.card-facts{font-size:11px}.catalogue-modal .hotel-grid{grid-template-columns:1fr}.criteria-panel{padding:16px}.criteria-list{gap:5px}.criterion{gap:7px}.criterion-icon{width:22px;height:22px}.criterion-edit{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Keep the current exchange and its selection together, above a persistent input. */
+.chat-active .topbar{position:sticky;top:0;z-index:20}
+.chat-active .main-inner{padding-bottom:var(--composer-space,140px)}
+.chat-active .composer-dock{position:fixed;z-index:30;left:var(--composer-left,28px);width:var(--composer-width,calc(100vw - 56px));bottom:var(--keyboard-inset,0px);padding:18px 0 max(18px,env(safe-area-inset-bottom));background:linear-gradient(to bottom,#fafafb00,#fafafb 18px)}
+.chat-active .composer{box-shadow:0 6px 28px #3d233017;border-color:#dfd6d9}
+.chat-active .composer:focus-within{border-color:#eb7c72;box-shadow:0 0 0 3px #e2251809,0 6px 28px #3d233017}
+.conversation-wrap{scroll-margin-top:112px;margin:0 0 26px}
+.conversation{gap:14px}
+.conversation-toggle{margin-bottom:12px}
+.conversation .message{white-space:normal}
+.conversation .message.user{align-self:flex-end;width:fit-content;max-width:84%;background:#fff0ec;border:0;border-radius:14px 14px 3px 14px;padding:12px 16px;color:#8c5347}
+.conversation .message.assistant{align-self:flex-start;width:fit-content;max-width:86%;padding:14px 17px;background:#e7e5eb;border:0;border-radius:14px 14px 14px 3px;box-shadow:none}
+.conversation .message.assistant::before{content:none}
+.message-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.75;margin:0}
+.assistant .message-text{font-size:15px;font-weight:650;line-height:1.7;color:#3f3543;letter-spacing:0}
+.assistant.latest{animation:reply-arrive .25s ease-out}
+.activity{width:fit-content;max-width:86%;margin-top:14px;padding:12px 16px;background:#efedf2;border:0;border-radius:14px 14px 14px 3px;gap:11px;color:#827384}
+.activity-copy{display:grid;gap:7px;min-width:0;flex:1}
+.activity-copy>span{color:#817382;font-size:12px;line-height:1.6}
+.activity .spinner{width:15px;height:15px;border-width:1.5px;align-self:center;margin-top:0}
+.activity .text-button{margin-left:4px;white-space:nowrap;align-self:flex-start;padding-top:2px}
+.results-heading{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+.results-update{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;background:#fff0eb;color:#b44736;border:1px solid #f5d9d2;border-radius:20px;font-size:10px;line-height:1;padding:6px 8px}
+.results-update>span{font-size:11px;font-weight:700}
+.chat-active .results-section{margin-top:25px;scroll-margin-top:112px}
+.results-section.is-updated .hotel-card{animation:selection-arrive .4s ease-out both}
+.results-section.is-updated .hotel-card:nth-child(2){animation-delay:.04s}
+.results-section.is-updated .hotel-card:nth-child(3){animation-delay:.08s}
+.hotel-skeleton{background:white;border:1px solid #e9e6e9;border-radius:14px;padding-bottom:24px;overflow:hidden;height:335px}
+.skeleton-image,.skeleton-line,.skeleton-price{background:linear-gradient(100deg,#f0ecee 30%,#f8f5f6 45%,#f0ecee 60%);background-size:220% 100%;animation:skeleton-wave 1.6s ease-in-out infinite}
+.skeleton-image{height:145px;width:100%;margin-bottom:22px}
+.skeleton-line{height:12px;border-radius:5px;margin:0 15px 13px;width:calc(100% - 30px)}
+.skeleton-line.short{width:55%}
+.skeleton-price{height:22px;border-radius:5px;margin:37px 15px 0;width:70px}
+@keyframes reply-arrive{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+@keyframes selection-arrive{from{opacity:.35;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes skeleton-wave{from{background-position:100% 0}to{background-position:-100% 0}}
+@media(max-width:900px){.hotel-skeleton:nth-child(3){display:none}.results-heading{gap:8px}.results-update{font-size:9px}.hotel-skeleton{height:330px}}
+@media(max-width:700px){.chat-active .main-inner{padding-bottom:4px}.chat-active .workspace{padding-bottom:var(--composer-space,140px)}.chat-active .composer-dock{padding:14px 0 max(14px,env(safe-area-inset-bottom));background:linear-gradient(to bottom,#fafafb00,#fafafb 14px)}.composer textarea{font-size:16px;max-height:110px}.chat-active .composer textarea{min-height:42px}.conversation-wrap{scroll-margin-top:92px;margin-bottom:22px}.conversation .message.user{padding:11px 13px}.conversation .message.assistant{padding:12px 14px;max-width:92%}.message-text{font-size:12px}.assistant .message-text{font-size:14px;line-height:1.65}.results-heading{align-items:flex-start;flex-direction:column;gap:8px}.section-heading{align-items:flex-start}.results-update{font-size:9px}.activity{padding:11px 13px;gap:10px;max-width:92%}.activity-copy>span{font-size:10px}.activity .text-button{font-size:10px}.skeleton-image{height:136px}}
+@media(prefers-reduced-motion:reduce){.chat-active .composer-dock,.assistant.latest,.results-section.is-updated .hotel-card,.skeleton-image,.skeleton-line,.skeleton-price{animation:none}}
+@media(max-width:700px){body:not(.chat-active) .composer textarea{min-height:65px}}

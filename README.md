@@ -48,7 +48,9 @@ Et corrigez :
 
 > Finalement le Portugal, avec un budget de 850 € par personne. Je garde les mêmes envies.
 
-Les critères se mettent à jour après chaque message, avant la fin de la recherche. Les nouvelles précisions conservent le contexte ; les corrections remplacent les choix précédents. Seul le dernier message est affiché ; le bouton **Étendre la conversation** permet de revoir l’historique. La recherche n’est pas déclenchée à chaque frappe : envoyez avec Entrée ou le bouton flèche. Maj+Entrée permet un retour à la ligne.
+Les critères se mettent à jour après chaque message, avant la fin de la recherche. Les nouvelles précisions conservent le contexte ; les corrections remplacent les choix précédents. Le dernier échange reste affiché : votre demande à droite, puis la réponse en gras dans une bulle plus foncée à gauche. Le bouton **Étendre la conversation** permet de revoir l’historique.
+
+À la première recherche, le champ descend progressivement en bas de la fenêtre et y reste pour les précisions suivantes. Un état de chargement précède l’apparition de la nouvelle sélection, signalée par **Sélection mise à jour**. La recherche n’est pas déclenchée à chaque frappe : envoyez avec Entrée ou le bouton flèche. Maj+Entrée permet un retour à la ligne.
 
 Cliquez directement sur **Destination**, **Départ**, **Durée**, **Budget**, **Dates**, **Voyageurs** ou **Options** dans le panneau de droite pour utiliser un formulaire. Les valeurs choisies sont validées et appliquées sans passer par l’extraction du modèle, puis la sélection est recalculée. Les autres critères et envies restent conservés. Le choix est ajouté à l’historique et reste compris lors des messages suivants. Les envies sont également modifiables avec le bouton **+**.
 

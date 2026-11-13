@@ -27,24 +27,26 @@
         <div id="conversation-wrap" class="conversation-wrap" hidden>
           <button type="button" id="conversation-toggle" class="conversation-toggle" aria-expanded="false" aria-controls="conversation" hidden>Étendre la conversation <span aria-hidden="true">⌄</span></button>
           <section id="conversation" class="conversation" aria-label="Votre conversation" aria-live="polite" aria-relevant="additions"></section>
+          <div id="activity" class="activity" role="status" aria-live="polite" hidden><span class="spinner"></span><div class="activity-copy"><span id="activity-label"></span></div><button type="button" id="cancel-search" class="text-button">Arrêter</button></div>
         </div>
 
+        <div id="composer-dock" class="composer-dock">
         <form id="search-form" class="composer">
           <label class="sr-only" for="prompt">Décrivez votre voyage ou précisez vos envies</label>
           <div class="composer-body"><span class="composer-spark" aria-hidden="true">✧</span><textarea id="prompt" rows="1" maxlength="2000" placeholder="Une semaine au soleil, un petit hôtel au calme…" required></textarea><button id="send" class="send" type="submit" aria-label="Envoyer ma demande" title="Envoyer · Entrée"><span aria-hidden="true">↑</span></button></div>
         </form>
+        </div>
 
         <div id="suggestions" class="suggestions" aria-label="Exemples de demandes">
           <button data-prompt="Une semaine en Grèce au départ de Lyon, 1 000 € maximum par personne. Un petit hôtel calme près d’une plage de sable, loin des grands complexes.">☀ <span>Du calme en Grèce</span></button>
           <button data-prompt="Nous sommes 2 adultes et 2 enfants. Une semaine au départ de Paris, un hôtel avec club enfants et piscine, en tout compris. Budget total : 3 500 €.">⌂ <span>En famille</span></button>
           <button data-prompt="Un séjour à Madère pour randonner et me déconnecter, dans un petit hôtel au vert. 7 nuits au départ de Nantes, moins de 1 200 € par personne.">♧ <span>Au vert</span></button>
         </div>
-        <div id="activity" class="activity" role="status" aria-live="polite" hidden><span class="spinner"></span><span id="activity-label"></span><button type="button" id="cancel-search" class="text-button">Arrêter</button></div>
         <div id="error" class="error" role="alert" hidden><span id="error-text"></span><button type="button" id="retry" class="text-button">Réessayer</button></div>
         <div id="setup-note" class="setup-note" hidden>Ajoutez votre clé Mistral pour commencer. <button type="button" id="setup-help" class="text-button">Configurer ↗</button></div>
 
         <section id="results-section" class="results-section" aria-labelledby="results-title">
-          <div class="section-heading"><h2 id="results-title">Quelques idées pour partir</h2><span id="results-count" class="results-count">20 destinations</span></div>
+          <div class="section-heading"><div class="results-heading"><h2 id="results-title">Quelques idées pour partir</h2><span id="results-update" class="results-update" role="status" hidden><span aria-hidden="true">✓</span> Sélection mise à jour</span></div><span id="results-count" class="results-count">20 destinations</span></div>
           <div id="results" class="hotel-grid"></div>
           <div id="empty-results" class="empty-results" hidden><span aria-hidden="true">⌕</span><h3>On ajuste un critère ?</h3><p>Aucun séjour ne correspond à cette sélection.</p></div>
         </section>

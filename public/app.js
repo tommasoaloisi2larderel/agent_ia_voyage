@@ -1,3 +1,5 @@
+import { editGroups, describeEdit } from './criteria-edit.js';
+
 const $ = selector => document.querySelector(selector);
 const types = { boutique: 'Boutique & intimiste', famille: 'En famille', club: 'Club & animé', nature: 'Nature & randonnée', spa: 'Spa & adultes' };
 const pensions = { petit_dejeuner: 'Petit déjeuner', demi_pension: 'Demi-pension', tout_compris: 'Tout compris' };
@@ -5,6 +7,7 @@ const euro = value => new Intl.NumberFormat('fr-FR', { style: 'currency', curren
 const date = value => value ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${value}T12:00:00Z`)) : '';
 const state = { bootstrap: null, criteria: null, context: null, messages: [], expanded: false, editing: null, failedEdit: null, busy: false, controller: null, lastFailed: false, cataloguePage: 0, catalogueTotal: 0, catalogueController: null };
 const hotelsById = new Map();
+let composerMotion = null;
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -24,7 +27,37 @@ function setBusy(busy) {
   $('#prompt').disabled = busy;
   $('#activity').hidden = !busy;
   $('#search-form').setAttribute('aria-busy', String(busy));
+  $('#results-section').setAttribute('aria-busy', String(busy));
   document.querySelectorAll('[data-prompt], .detail-search, .criterion, #edit-envies').forEach(button => { button.disabled = busy; });
+}
+
+function syncComposerDock() {
+  if (!state.messages.length) return;
+  $('#prompt').placeholder = window.innerWidth <= 700 ? 'Précisez vos envies…' : 'Affinez votre séjour ou répondez à FRAM…';
+  const rect = $('.main-inner').getBoundingClientRect();
+  const styles = document.documentElement.style;
+  styles.setProperty('--composer-left', `${rect.left}px`);
+  styles.setProperty('--composer-width', `${rect.width}px`);
+  styles.setProperty('--composer-space', `${$('#composer-dock').offsetHeight + 24}px`);
+  const viewport = window.visualViewport;
+  styles.setProperty('--keyboard-inset', `${viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0}px`);
+}
+new ResizeObserver(() => requestAnimationFrame(syncComposerDock)).observe($('#main'));
+new ResizeObserver(() => requestAnimationFrame(syncComposerDock)).observe($('#composer-dock'));
+window.addEventListener('resize', syncComposerDock);
+window.visualViewport?.addEventListener('resize', syncComposerDock);
+window.visualViewport?.addEventListener('scroll', syncComposerDock);
+
+function lowerComposer(from) {
+  if (!from || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+  composerMotion?.cancel();
+  const form = $('#search-form');
+  const to = form.getBoundingClientRect();
+  composerMotion = form.animate([
+    {transform:`translate(${from.left-to.left}px, ${from.top-to.top}px)`},
+    {transform:'translate(0, 0)'},
+  ], {duration:1100, delay:100, easing:'cubic-bezier(.3,0,.2,1)', fill:'backwards'});
+  return composerMotion.finished.catch(() => {});
 }
 function openDialog(selector) {
   const dialog = $(selector);
@@ -115,25 +148,46 @@ function createCard(hotel, { sources = false, rank = null } = {}) {
 
 function renderResults(hotels, { total = 300, semantic = false, preview = false } = {}) {
   $('#results-section').hidden = false;
+  $('#results-section').classList.remove('is-loading', 'is-updated');
+  $('#results-section').setAttribute('aria-busy', 'false');
+  $('#results-update').hidden = true;
   $('#results').replaceChildren(...hotels.map((h, i) => createCard(h, { sources: !preview, rank: !preview ? i + 1 : null })));
   $('#empty-results').hidden = hotels.length > 0;
   $('#results-title').textContent = preview ? 'Quelques idées pour partir' : hotels.length ? 'Votre sélection' : 'Aucun séjour pour le moment';
   $('#results-count').textContent = preview ? '20 destinations' : `${total} séjour${total > 1 ? 's' : ''}`;
 }
 
+function showSearchLoading() {
+  $('#results-section').hidden = false;
+  $('#results-section').classList.remove('is-updated');
+  $('#results-section').classList.add('is-loading');
+  $('#results-update').hidden = true;
+  $('#results-title').textContent = 'Votre prochaine sélection';
+  $('#results-count').textContent = 'Recherche en cours…';
+  $('#empty-results').hidden = true;
+  $('#results').replaceChildren(...Array.from({length:3}, () => {
+    const card = el('div','hotel-skeleton'); card.setAttribute('aria-hidden','true');
+    card.append(el('div','skeleton-image'),el('div','skeleton-line'),el('div','skeleton-line short'),el('div','skeleton-price')); return card;
+  }));
+}
+
 function renderConversation() {
+  const lastUser = state.messages.findLastIndex(m => m.role === 'user');
   $('#conversation-wrap').hidden = !state.messages.length;
-  $('#conversation-toggle').hidden = state.messages.length < 2;
+  $('#conversation-toggle').hidden = lastUser < 1;
   $('#conversation-toggle').setAttribute('aria-expanded', String(state.expanded));
   $('#conversation-toggle').replaceChildren(document.createTextNode(state.expanded ? 'Réduire la conversation ' : 'Étendre la conversation '),el('span','',state.expanded ? '⌃' : '⌄'));
   $('#conversation').classList.toggle('expanded', state.expanded);
   $('#conversation').replaceChildren(...state.messages.map((m,i) => {
-    const node = el('div', `message ${m.role}`, m.content);
+    const node = el('article', `message ${m.role}${i === state.messages.length - 1 ? ' latest' : ''}`);
+    node.append(el('p','message-text',m.content));
     node.setAttribute('aria-label', m.role === 'user' ? 'Vous' : 'FRAM');
-    node.hidden = !state.expanded && i !== state.messages.length - 1;
+    node.hidden = !state.expanded && i < (lastUser === -1 ? state.messages.length - 1 : lastUser);
     return node;
   }));
   document.body.classList.toggle('chat-active', state.messages.length > 0);
+  $('#prompt').placeholder = state.messages.length ? 'Affinez votre séjour ou répondez à FRAM…' : 'Une semaine au soleil, un petit hôtel au calme…';
+  syncComposerDock();
 }
 $('#conversation-toggle').addEventListener('click', () => {state.expanded = !state.expanded; renderConversation();});
 
@@ -260,6 +314,7 @@ async function sendMessage({ retry = false, edit = null } = {}) {
   const content = edit ? describeEdit(edit, state.bootstrap) : $('#prompt').value.trim();
   if (!retry && !content) return;
   if (!retry && state.messages.length >= 79) { showError('Cette conversation est longue. Lancez une nouvelle recherche pour continuer.', false); return; }
+  const composerFrom = state.messages.length ? null : $('#search-form').getBoundingClientRect();
   if (!retry) {
     state.messages.push({ role: 'user', content }); state.expanded = false; renderConversation();
     if (!edit) { $('#prompt').value = ''; $('#prompt').style.height = ''; }
@@ -267,10 +322,12 @@ async function sendMessage({ retry = false, edit = null } = {}) {
   state.failedEdit = edit;
   state.lastFailed = false; hideError(); setBusy(true);
   $('#activity-label').textContent = 'Recherche…';
-  $('#results-section').hidden = true;
+  showSearchLoading();
+  syncComposerDock();
+  const lowering = lowerComposer(composerFrom);
   const controller = new AbortController(); state.controller = controller;
-  $('#search-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
   let done = false;
+  let nextResults = null, nextReply = null;
   try {
     const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: state.messages, context: state.context, edit }), signal: controller.signal });
     if (!response.ok) { const body = await response.json(); throw new Error(body.error || 'La recherche a échoué.'); }
@@ -281,8 +338,8 @@ async function sendMessage({ retry = false, edit = null } = {}) {
       if (event.type === 'user') {state.messages.at(-1).content = event.message; renderConversation();}
       if (event.type === 'status') $('#activity-label').textContent = event.message;
       if (event.type === 'criteria') { renderCriteria(event.criteria); state.context = event.context; }
-      if (event.type === 'results') renderResults(event.hotels, event);
-      if (event.type === 'reply') { state.messages.push({ role: 'assistant', content: event.message }); renderConversation(); }
+      if (event.type === 'results') nextResults = event;
+      if (event.type === 'reply') nextReply = event.message;
       if (event.type === 'done') done = true;
       if (event.type === 'error') throw new Error(event.message);
     }
@@ -294,12 +351,23 @@ async function sendMessage({ retry = false, edit = null } = {}) {
       if (finished) { if (buffer.trim()) receive(buffer); break; }
     }
     if (!done) throw new Error('La connexion a été interrompue avant la fin de la recherche. Réessayez.');
+    if (!nextResults || !nextReply) throw new Error('La sélection est incomplète. Réessayez votre recherche.');
+    if (lowering) await lowering;
+    if (state.controller !== controller) return;
+    controller.signal.throwIfAborted();
+    renderResults(nextResults.hotels, nextResults);
+    state.messages.push({ role: 'assistant', content: nextReply }); renderConversation();
+    $('#results-update').hidden = false;
+    $('#results-section').classList.add('is-updated');
+    const exchangeTop = $('#conversation-wrap').getBoundingClientRect().top;
+    if (!document.querySelector('dialog[open]') && (exchangeTop < $('.topbar').getBoundingClientRect().bottom || exchangeTop > window.innerHeight * .45)) $('#conversation-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (error) {
     if (state.controller !== controller) return;
     state.lastFailed = true;
+    $('#results-section').hidden = true;
     showError(controller.signal.aborted ? 'Recherche arrêtée. Vous pouvez réessayer ou ajouter une précision.' : error.message);
   } finally {
-    if (state.controller === controller) { state.controller = null; setBusy(false); $('#prompt').focus({ preventScroll: true }); }
+    if (state.controller === controller) { state.controller = null; setBusy(false); syncComposerDock(); }
   }
 }
 
@@ -312,6 +380,7 @@ $('#cancel-search').addEventListener('click', () => state.controller?.abort());
 $('#config-open').addEventListener('click', () => openDialog('#config-dialog'));
 $('#setup-help').addEventListener('click', () => openDialog('#config-dialog'));
 $('#reset').addEventListener('click', () => {
+  composerMotion?.cancel(); composerMotion = null;
   state.controller?.abort(); state.controller = null; state.messages = []; state.context = null; state.lastFailed = false; state.failedEdit = null; state.expanded = false;
   setBusy(false); hideError(); $('#conversation').replaceChildren(); $('#prompt').value = ''; $('#prompt').style.height = '';
   renderConversation();
@@ -374,4 +443,3 @@ async function bootstrap() {
   } catch (error) { $('#connection-label').textContent = 'Serveur indisponible'; showError(error.message); }
 }
 bootstrap();
-import { editGroups, describeEdit } from './criteria-edit.js';

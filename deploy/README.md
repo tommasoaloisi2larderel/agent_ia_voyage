@@ -10,7 +10,8 @@ Déployé le 12 novembre 2026 sur `51.15.129.189`.
 
 ## Fichiers du serveur
 
-- Version applicative : `/opt/fram/releases/20261112-9e08b233cb3c`
+- Versions applicatives : `/opt/fram/releases/<version>`
+- Identifiant actif : `/opt/fram/current-release`
 - Lien actif : `/opt/fram/current`
 - Configuration privée : `/opt/fram/shared/.env` (root, mode 600)
 - Embeddings persistants : `/opt/fram/shared/cache`
@@ -36,7 +37,25 @@ Pour changer la clé, éditez `/opt/fram/shared/.env` sur le serveur, puis recr�
 
 ```sh
 cd /opt/fram/current
-FRAM_RELEASE=20261112-9e08b233cb3c docker compose -p fram -f deploy/compose.production.yaml up -d --force-recreate --wait
+FRAM_RELEASE="$(cat /opt/fram/current-release)" docker compose -p fram -f deploy/compose.production.yaml up -d --force-recreate --wait
+```
+
+## Mettre à jour FRAM
+
+Préparez une nouvelle version dans `/opt/fram/releases/<version>`, puis construisez son image `fram-voyage:<version>`. Après validation des tests :
+
+```sh
+bash /opt/fram/releases/<version>/deploy/update.sh <version>
+```
+
+Le script teste l’image sur le port interne 3001, puis recrée uniquement le conteneur FRAM. Il vérifie les routes publiques et le contenu des fichiers servis avant de changer le lien actif. L’ancienne image et les fichiers restent disponibles ; la configuration Nginx, la clé et les embeddings sont conservés. Un échec déclenche le retour à l’image précédente.
+
+Pour revenir manuellement à une version précédente, utilisez son identifiant et son dossier :
+
+```sh
+FRAM_RELEASE=<ancienne-version> docker compose -p fram -f /opt/fram/releases/<ancienne-version>/deploy/compose.production.yaml up -d --no-build --wait
+ln -sfn /opt/fram/releases/<ancienne-version> /opt/fram/current
+printf '%s\n' '<ancienne-version>' > /opt/fram/current-release
 ```
 
 ## Rétablir l’ancien site sur le port principal
