@@ -1,5 +1,5 @@
 import { airports, destinations, catalogue, filterOffers, cosine } from './catalogue.js';
-import { extractionSchema, validateCriteria } from './schema.js';
+import { extractionSchema, contextSchema, validate, validateCriteria } from './schema.js';
 import { mistral } from './mistral.js';
 import { index } from './embeddings.js';
 import { groundCriteria } from './grounding.js';
@@ -45,7 +45,11 @@ export async function runAgent(messages, emit, signal, deps = {}) {
     }
     criteria = validateCriteria(groundCriteria(raw, citations, messages));
   }
-  emit('criteria', { criteria, context: { criteria, citations } });
+  // Un contexte diffusé doit pouvoir être accepté tel quel au prochain tour.
+  citations = [...new Map(citations.map(c => [JSON.stringify([c.champ,c.extrait]),c])).values()];
+  const context = { criteria, citations };
+  validate(context, contextSchema);
+  emit('criteria', { criteria, context });
   const candidates = filterOffers(catalogue, criteria);
   emit('status', { message: `${candidates.length} hôtels respectent vos filtres.`, phase: 'filtres' });
   if (!candidates.length) {

@@ -71,7 +71,13 @@ export function createApp({ agent = runAgent } = {}) {
         if (active >= 3) throw new AppError('Plusieurs recherches sont en cours. Réessayez dans un instant.', 429);
         const { messages, context, edit } = await readBody(req);
         const validated = validateMessages(messages);
-        if (context != null) { try { validate(context, contextSchema); } catch { throw new AppError('Le contexte de recherche est invalide. Commencez une nouvelle recherche.', 400); } }
+        if (context != null) {
+          try { validate(context, contextSchema); }
+          catch (error) {
+            console.warn(`Contexte de recherche refusé : ${error.message}`);
+            throw new AppError('Le contexte de recherche est invalide. Commencez une nouvelle recherche.', 400);
+          }
+        }
         const preparedEdit = edit == null ? null : prepareEdit(edit, context);
         if (preparedEdit) validated[validated.length - 1].content = preparedEdit.content;
         if (!config.apiKey && agent === runAgent) throw new AppError('Ajoutez MISTRAL_API_KEY dans le fichier .env, puis redémarrez le serveur.', 503);

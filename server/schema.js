@@ -37,7 +37,12 @@ export const extractionSchema = {
 };
 export const contextSchema = {
   type: 'object', additionalProperties: false,
-  properties: { criteria: criteriaSchema, citations: extractionSchema.properties.citations },
+  properties: { criteria: criteriaSchema, citations: {
+    ...extractionSchema.properties.citations,
+    // Le contexte fusionne les citations conservées de plusieurs extractions.
+    // Chaque champ est remplacé en entier lorsqu'il change : au plus 20 par champ.
+    maxItems: extractionSchema.properties.citations.maxItems * extractionSchema.properties.citations.items.properties.champ.enum.length,
+  } },
   required: ['criteria', 'citations'],
 };
 

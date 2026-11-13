@@ -5,7 +5,7 @@ const types = { boutique: 'Boutique & intimiste', famille: 'En famille', club: '
 const pensions = { petit_dejeuner: 'Petit déjeuner', demi_pension: 'Demi-pension', tout_compris: 'Tout compris' };
 const euro = value => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
 const date = value => value ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${value}T12:00:00Z`)) : '';
-const state = { bootstrap: null, criteria: null, context: null, messages: [], expanded: false, editing: null, failedEdit: null, busy: false, controller: null, lastFailed: false, cataloguePage: 0, catalogueTotal: 0, catalogueController: null };
+const state = { bootstrap: null, criteria: null, context: null, results: null, messages: [], expanded: false, editing: null, failedEdit: null, busy: false, controller: null, lastFailed: false, cataloguePage: 0, catalogueTotal: 0, catalogueController: null };
 const hotelsById = new Map();
 let composerMotion = null;
 
@@ -147,6 +147,7 @@ function createCard(hotel, { sources = false, rank = null } = {}) {
 }
 
 function renderResults(hotels, { total = 300, semantic = false, preview = false } = {}) {
+  state.results = { hotels, options: { total, semantic, preview } };
   $('#results-section').hidden = false;
   $('#results-section').classList.remove('is-loading', 'is-updated');
   $('#results-section').setAttribute('aria-busy', 'false');
@@ -320,6 +321,7 @@ async function sendMessage({ retry = false, edit = null } = {}) {
     if (!edit) { $('#prompt').value = ''; $('#prompt').style.height = ''; }
   }
   state.failedEdit = edit;
+  const previous = { criteria: state.criteria, context: state.context, results: state.results };
   state.lastFailed = false; hideError(); setBusy(true);
   $('#activity-label').textContent = 'Recherche…';
   showSearchLoading();
@@ -327,7 +329,7 @@ async function sendMessage({ retry = false, edit = null } = {}) {
   const lowering = lowerComposer(composerFrom);
   const controller = new AbortController(); state.controller = controller;
   let done = false;
-  let nextResults = null, nextReply = null;
+  let nextResults = null, nextReply = null, nextContext = null;
   try {
     const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ messages: state.messages, context: state.context, edit }), signal: controller.signal });
     if (!response.ok) { const body = await response.json(); throw new Error(body.error || 'La recherche a échoué.'); }
@@ -337,7 +339,7 @@ async function sendMessage({ retry = false, edit = null } = {}) {
       const event = JSON.parse(line);
       if (event.type === 'user') {state.messages.at(-1).content = event.message; renderConversation();}
       if (event.type === 'status') $('#activity-label').textContent = event.message;
-      if (event.type === 'criteria') { renderCriteria(event.criteria); state.context = event.context; }
+      if (event.type === 'criteria') { renderCriteria(event.criteria); nextContext = event.context; }
       if (event.type === 'results') nextResults = event;
       if (event.type === 'reply') nextReply = event.message;
       if (event.type === 'done') done = true;
@@ -351,10 +353,11 @@ async function sendMessage({ retry = false, edit = null } = {}) {
       if (finished) { if (buffer.trim()) receive(buffer); break; }
     }
     if (!done) throw new Error('La connexion a été interrompue avant la fin de la recherche. Réessayez.');
-    if (!nextResults || !nextReply) throw new Error('La sélection est incomplète. Réessayez votre recherche.');
+    if (!nextResults || !nextReply || !nextContext) throw new Error('La sélection est incomplète. Réessayez votre recherche.');
     if (lowering) await lowering;
     if (state.controller !== controller) return;
     controller.signal.throwIfAborted();
+    state.context = nextContext;
     renderResults(nextResults.hotels, nextResults);
     state.messages.push({ role: 'assistant', content: nextReply }); renderConversation();
     $('#results-update').hidden = false;
@@ -364,7 +367,10 @@ async function sendMessage({ retry = false, edit = null } = {}) {
   } catch (error) {
     if (state.controller !== controller) return;
     state.lastFailed = true;
-    $('#results-section').hidden = true;
+    state.context = previous.context;
+    renderCriteria(previous.criteria);
+    if (previous.results) renderResults(previous.results.hotels, previous.results.options);
+    else $('#results-section').hidden = true;
     showError(controller.signal.aborted ? 'Recherche arrêtée. Vous pouvez réessayer ou ajouter une précision.' : error.message);
   } finally {
     if (state.controller === controller) { state.controller = null; setBusy(false); syncComposerDock(); }
